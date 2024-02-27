@@ -35,12 +35,11 @@ export declare namespace JsonRpcTypes {
         publicKey: string;
         metadata: SignClientTypes.Metadata;
       };
+      expiryTimestamp?: number;
     };
     wc_sessionSettle: {
       relay: RelayerTypes.ProtocolOptions;
       namespaces: SessionTypes.Namespaces;
-      requiredNamespaces: ProposalTypes.RequiredNamespaces;
-      optionalNamespaces: ProposalTypes.OptionalNamespaces;
       sessionProperties?: ProposalTypes.SessionProperties;
       pairingTopic: string;
       expiry: number;
@@ -62,6 +61,7 @@ export declare namespace JsonRpcTypes {
       request: {
         method: string;
         params: any;
+        expiryTimestamp?: number;
       };
       chainId: string;
     };

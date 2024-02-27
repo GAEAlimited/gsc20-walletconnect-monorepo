@@ -71,6 +71,7 @@ export class UniversalProvider implements IUniversalProvider {
   public async request<T = unknown>(
     args: RequestArguments,
     chain?: string | undefined,
+    expiry?: number | undefined,
   ): Promise<T> {
     const [namespace, chainId] = this.validateChain(chain);
 
@@ -84,6 +85,7 @@ export class UniversalProvider implements IUniversalProvider {
       },
       chainId: `${namespace}:${chainId}`,
       topic: this.session.topic,
+      expiry,
     });
   }
 
@@ -91,9 +93,10 @@ export class UniversalProvider implements IUniversalProvider {
     args: RequestArguments,
     callback: (error: Error | null, response: JsonRpcResult) => void,
     chain?: string | undefined,
+    expiry?: number | undefined,
   ): void {
     const id = new Date().getTime();
-    this.request(args, chain)
+    this.request(args, chain, expiry)
       .then((response) => callback(null, formatJsonRpcResult(id, response)))
       .catch((error) => callback(error, undefined as any));
   }
@@ -183,10 +186,9 @@ export class UniversalProvider implements IUniversalProvider {
         .then((session) => {
           this.session = session;
           // assign namespaces from session if not already defined
-          if (!this.namespaces) {
-            this.namespaces = populateNamespacesChains(session.namespaces) as NamespaceConfig;
-            this.persist("namespaces", this.namespaces);
-          }
+          const approved = populateNamespacesChains(session.namespaces) as NamespaceConfig;
+          this.namespaces = mergeRequiredOptionalNamespaces(this.namespaces, approved);
+          this.persist("namespaces", this.namespaces);
         })
         .catch((error) => {
           if (error.message !== PROPOSAL_EXPIRY_MESSAGE) {
@@ -370,6 +372,7 @@ export class UniversalProvider implements IUniversalProvider {
           convertChainIdToNumber(requestChainId) !== convertChainIdToNumber(payloadChainId)
             ? `${namespace}:${convertChainIdToNumber(payloadChainId)}`
             : requestChainId;
+
         this.onChainChanged(chainIdToProcess);
       } else {
         this.events.emit(event.name, event.data);
@@ -464,12 +467,21 @@ export class UniversalProvider implements IUniversalProvider {
 
     const [namespace, chainId] = this.validateChain(caip2Chain);
 
+    if (!chainId) return;
+
     if (!internal) {
       this.getProvider(namespace).setDefaultChain(chainId);
     }
 
-    (this.namespaces[namespace] ?? this.namespaces[`${namespace}:${chainId}`]).defaultChain =
-      chainId;
+    if (this.namespaces[namespace]) {
+      this.namespaces[namespace].defaultChain = chainId;
+    } else if (this.namespaces[`${namespace}:${chainId}`]) {
+      this.namespaces[`${namespace}:${chainId}`].defaultChain = chainId;
+    } else {
+      // @ts-ignore
+      this.namespaces[`${namespace}:${chainId}`] = { defaultChain: chainId };
+    }
+
     this.persist("namespaces", this.namespaces);
     this.events.emit("chainChanged", chainId);
   }
