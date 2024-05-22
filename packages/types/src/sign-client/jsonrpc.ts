@@ -3,6 +3,7 @@ import { SignClientTypes } from "./client";
 import { RelayerTypes } from "../core/relayer";
 import { SessionTypes } from "./session";
 import { ProposalTypes } from "./proposal";
+import { AuthTypes } from ".";
 
 export declare namespace JsonRpcTypes {
   // -- core ------------------------------------------------------- //
@@ -16,7 +17,8 @@ export declare namespace JsonRpcTypes {
     | "wc_sessionDelete"
     | "wc_sessionPing"
     | "wc_sessionRequest"
-    | "wc_sessionEvent";
+    | "wc_sessionEvent"
+    | "wc_sessionAuthenticate";
 
   // -- requests --------------------------------------------------- //
 
@@ -35,13 +37,13 @@ export declare namespace JsonRpcTypes {
         publicKey: string;
         metadata: SignClientTypes.Metadata;
       };
+      expiryTimestamp?: number;
     };
     wc_sessionSettle: {
       relay: RelayerTypes.ProtocolOptions;
       namespaces: SessionTypes.Namespaces;
-      requiredNamespaces: ProposalTypes.RequiredNamespaces;
-      optionalNamespaces: ProposalTypes.OptionalNamespaces;
       sessionProperties?: ProposalTypes.SessionProperties;
+      sessionConfig?: SessionTypes.SessionConfig;
       pairingTopic: string;
       expiry: number;
       controller: {
@@ -62,6 +64,7 @@ export declare namespace JsonRpcTypes {
       request: {
         method: string;
         params: any;
+        expiryTimestamp?: number;
       };
       chainId: string;
     };
@@ -72,6 +75,7 @@ export declare namespace JsonRpcTypes {
       };
       chainId: string;
     };
+    wc_sessionAuthenticate: AuthTypes.SessionAuthenticateRequestParams;
   }
 
   // -- responses -------------------------------------------------- //
@@ -89,6 +93,7 @@ export declare namespace JsonRpcTypes {
     wc_sessionPing: true;
     wc_sessionRequest: JsonRpcResult;
     wc_sessionEvent: true;
+    wc_sessionAuthenticate: AuthTypes.SessionAuthenticateResponseParams;
   }
 
   export type Error = ErrorResponse;
