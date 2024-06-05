@@ -86,7 +86,7 @@ export class Pairing implements IPairing {
     this.registeredMethods = [...new Set([...this.registeredMethods, ...methods])];
   };
 
-  public create: IPairing["create"] = async () => {
+  public create: IPairing["create"] = async (params) => {
     this.isInitialized();
     const symKey = generateRandomBytes32();
     const topic = await this.core.crypto.setSymKey(symKey);
@@ -100,10 +100,11 @@ export class Pairing implements IPairing {
       symKey,
       relay,
       expiryTimestamp: expiry,
+      methods: params?.methods,
     });
+    this.core.expirer.set(topic, expiry);
     await this.pairings.set(topic, pairing);
     await this.core.relayer.subscribe(topic);
-    this.core.expirer.set(topic, expiry);
 
     return { topic, uri };
   };
@@ -111,7 +112,7 @@ export class Pairing implements IPairing {
   public pair: IPairing["pair"] = async (params) => {
     this.isInitialized();
     this.isValidPair(params);
-    const { topic, symKey, relay, expiryTimestamp } = parseUri(params.uri);
+    const { topic, symKey, relay, expiryTimestamp, methods } = parseUri(params.uri);
     let existingPairing;
     if (this.pairings.keys.includes(topic)) {
       existingPairing = this.pairings.get(topic);
@@ -123,9 +124,9 @@ export class Pairing implements IPairing {
     }
 
     const expiry = expiryTimestamp || calcExpiry(FIVE_MINUTES);
-    const pairing = { topic, relay, expiry, active: false };
-    await this.pairings.set(topic, pairing);
+    const pairing = { topic, relay, expiry, active: false, methods };
     this.core.expirer.set(topic, expiry);
+    await this.pairings.set(topic, pairing);
 
     if (params.activatePairing) {
       await this.activate({ topic });
@@ -144,8 +145,8 @@ export class Pairing implements IPairing {
   public activate: IPairing["activate"] = async ({ topic }) => {
     this.isInitialized();
     const expiry = calcExpiry(THIRTY_DAYS);
-    await this.pairings.update(topic, { active: true, expiry });
     this.core.expirer.set(topic, expiry);
+    await this.pairings.update(topic, { active: true, expiry });
   };
 
   public ping: IPairing["ping"] = async (params) => {

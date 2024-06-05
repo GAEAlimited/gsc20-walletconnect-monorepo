@@ -1,4 +1,4 @@
-import { FIVE_MINUTES, ONE_DAY, SEVEN_DAYS } from "@walletconnect/time";
+import { FIVE_MINUTES, ONE_DAY, ONE_HOUR, SEVEN_DAYS } from "@walletconnect/time";
 import { EngineTypes } from "@walletconnect/types";
 
 export const ENGINE_CONTEXT = "engine";
@@ -14,6 +14,16 @@ export const ENGINE_RPC_OPTS: EngineTypes.RpcOptsMap = {
       ttl: FIVE_MINUTES,
       prompt: false,
       tag: 1101,
+    },
+    reject: {
+      ttl: FIVE_MINUTES,
+      prompt: false,
+      tag: 1120,
+    },
+    autoReject: {
+      ttl: FIVE_MINUTES,
+      prompt: false,
+      tag: 1121,
     },
   },
   wc_sessionSettle: {
@@ -99,6 +109,28 @@ export const ENGINE_RPC_OPTS: EngineTypes.RpcOptsMap = {
       ttl: ONE_DAY,
       prompt: false,
       tag: 1115,
+    },
+  },
+  wc_sessionAuthenticate: {
+    req: {
+      ttl: ONE_HOUR,
+      prompt: true,
+      tag: 1116,
+    },
+    res: {
+      ttl: ONE_HOUR,
+      prompt: false,
+      tag: 1117,
+    },
+    reject: {
+      ttl: FIVE_MINUTES,
+      prompt: false,
+      tag: 1118,
+    },
+    autoReject: {
+      ttl: FIVE_MINUTES,
+      prompt: false,
+      tag: 1119,
     },
   },
 };
